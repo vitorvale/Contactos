@@ -5,37 +5,37 @@
 #define MAX_EMAIL 511
 #define MAX_NUMERO_TELEFONE 63
 
-typedef struct listNode {
-char *nome;
-char *email;
-char *numeroTelefone;
-struct listNode *next;
-} listNode;
+typedef struct ListNode {
+    char *nome;
+    char *email;
+    char *numeroTelefone;
+    struct ListNode *next;
+} ListNode;
 
-typedef listNode* link;
+typedef ListNode* Link;
 
-link criaContacto(char *nome, char *email, char *numeroTelefone);
+Link criaContacto(char *nome, char *email, char *numeroTelefone);
 
-link insereContacto(link head, char *nome, char *email, char *numeroTelefone);
+Link insereContacto(Link head, char *nome, char *email, char *numeroTelefone);
 
-void listaContactos(link head);
+void listaContactos(Link head);
 
-int verificaNomeExistente(link head, char *nome);
+int verificaNomeExistente(Link head, char *nome);
 
-void procuraContacto(link head, char *nome);
+void procuraContacto(Link head, char *nome);
 
-link removeContacto(link head, char *nome);
+Link removeContacto(Link head, char *nome);
 
-void freeNode(link node);
+void freeNode(Link node);
 
-void alteraEmail(link head, char *nome, char *novoEmail);
+void alteraEmail(Link head, char *nome, char *novoEmail);
 
-void freeList(link head);
+void freeList(Link head);
 
-void printNode(link node);
+void printNode(Link node);
 
 int main(){
-    link head = NULL;
+    Link head = NULL;
     char cmd, bufferNome[MAX_NOME], bufferEmail[MAX_EMAIL], bufferNumTelefone[MAX_NUMERO_TELEFONE];
 
     memset(bufferNome, '\0', sizeof(char) * MAX_NOME);
@@ -95,10 +95,10 @@ int main(){
     
 }
 
-link criaContacto(char *nome, char *email, char *numeroTelefone){
-    link node = NULL;
+Link criaContacto(char *nome, char *email, char *numeroTelefone){
+    Link node = NULL;
 
-    node = (link) malloc(sizeof(listNode));
+    node = (Link) malloc(sizeof(ListNode));
 
     node->nome = (char*) malloc(sizeof(char)*(strlen(nome) + 1));
     node->email = (char*) malloc(sizeof(char)*(strlen(email) + 1));
@@ -112,8 +112,8 @@ link criaContacto(char *nome, char *email, char *numeroTelefone){
     return node;
 }
 
-link insereContacto(link head, char *nome, char *email, char *numeroTelefone){
-    link nodeAux = NULL;
+Link insereContacto(Link head, char *nome, char *email, char *numeroTelefone){
+    Link nodeAux = NULL;
 
     if (head == NULL){
         return criaContacto(nome, email, numeroTelefone);
@@ -124,16 +124,16 @@ link insereContacto(link head, char *nome, char *email, char *numeroTelefone){
     return head;
 }
 
-void listaContactos(link head){
-    link nodeAux = NULL;
+void listaContactos(Link head){
+    Link nodeAux = NULL;
 
     for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->next){
         printf("%s %s %s\n", nodeAux->nome, nodeAux->email, nodeAux->numeroTelefone);
     }
 }
 
-int verificaNomeExistente(link head, char *nome){
-    link nodeAux = NULL;
+int verificaNomeExistente(Link head, char *nome){
+    Link nodeAux = NULL;
 
     for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->next){
         if (strcmp(nodeAux->nome, nome) == 0){
@@ -145,8 +145,8 @@ int verificaNomeExistente(link head, char *nome){
     return 0;
 }
 
-void procuraContacto(link head, char *nome){
-    link nodeAux = NULL;
+void procuraContacto(Link head, char *nome){
+    Link nodeAux = NULL;
 
     for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->next){
         if (strcmp(nodeAux->nome, nome) == 0){
@@ -159,8 +159,8 @@ void procuraContacto(link head, char *nome){
 
 }
 
-link removeContacto(link head, char *nome){
-    link nodeAux = NULL, prevNode = NULL;
+Link removeContacto(Link head, char *nome){
+    Link nodeAux = NULL, prevNode = NULL;
     int flagNome = 0;
 
     for (nodeAux = head, prevNode = NULL; nodeAux != NULL; prevNode = nodeAux, nodeAux = nodeAux->next){
@@ -184,7 +184,7 @@ link removeContacto(link head, char *nome){
     return head;        
 }
 
-void freeNode(link node){
+void freeNode(Link node){
     /*printf("Vai eliminar o node :\n");
     printf("%s\n", node->nome);*/
     free(node->nome);
@@ -196,8 +196,8 @@ void freeNode(link node){
     free(node);
 }
 
-void alteraEmail(link head, char *nome, char *novoEmail){
-    link nodeAux = NULL;
+void alteraEmail(Link head, char *nome, char *novoEmail){
+    Link nodeAux = NULL;
 
     for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->next){
         if (strcmp(nodeAux->nome, nome) == 0){
@@ -213,8 +213,8 @@ void alteraEmail(link head, char *nome, char *novoEmail){
 
 }
 
-void freeList(link head){
-    link nodeAux = NULL, nextNodeAux = NULL;
+void freeList(Link head){
+    Link nodeAux = NULL, nextNodeAux = NULL;
 
     nodeAux = head;
     nextNodeAux = head->next;
@@ -228,6 +228,6 @@ void freeList(link head){
     freeNode(nodeAux);    
 }
 
-void printNode(link node){
+void printNode(Link node){
     printf("%s %s %s\n", node->nome, node->email, node->numeroTelefone);
 }
