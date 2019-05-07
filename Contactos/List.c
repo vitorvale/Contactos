@@ -46,6 +46,7 @@ int main(){
 
     memset(bufferNome, '\0', sizeof(char) * MAX_NOME);
     memset(bufferEmail, '\0', sizeof(char) * MAX_EMAIL);
+    memset(bufferDominio, '\0', sizeof(char) * MAX_EMAIL);
     memset(bufferNumTelefone, '\0', sizeof(char) * MAX_NUMERO_TELEFONE);
 
     while(1){
