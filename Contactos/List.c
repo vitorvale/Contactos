@@ -34,9 +34,15 @@ void freeList(Link head);
 
 void printNode(Link node);
 
+void numOcorrenciasDominio(Link head, char *dominio);
+
+char *getDominio(Link node);
+
+int comprimentoDominio(Link node);
+
 int main(){
     Link head = NULL;
-    char cmd, bufferNome[MAX_NOME], bufferEmail[MAX_EMAIL], bufferNumTelefone[MAX_NUMERO_TELEFONE];
+    char cmd, bufferNome[MAX_NOME], bufferEmail[MAX_EMAIL], bufferNumTelefone[MAX_NUMERO_TELEFONE], bufferDominio[MAX_EMAIL];
 
     memset(bufferNome, '\0', sizeof(char) * MAX_NOME);
     memset(bufferEmail, '\0', sizeof(char) * MAX_EMAIL);
@@ -84,6 +90,11 @@ int main(){
                 scanf("%s %s", bufferNome, bufferEmail);
                 alteraEmail(head, bufferNome, bufferEmail);
                 break;
+            case 'c':
+                getchar();
+                scanf("%s", bufferDominio);
+                numOcorrenciasDominio(head, bufferDominio);
+                break;    
             }    
 
 
@@ -128,7 +139,7 @@ void listaContactos(Link head){
     Link nodeAux = NULL;
 
     for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->next){
-        printf("%s %s %s\n", nodeAux->nome, nodeAux->email, nodeAux->numeroTelefone);
+        printNode(nodeAux);
     }
 }
 
@@ -216,6 +227,10 @@ void alteraEmail(Link head, char *nome, char *novoEmail){
 void freeList(Link head){
     Link nodeAux = NULL, nextNodeAux = NULL;
 
+    if (head == NULL){
+        return;
+    }
+
     nodeAux = head;
     nextNodeAux = head->next;
     while (nextNodeAux != NULL){
@@ -231,3 +246,56 @@ void freeList(Link head){
 void printNode(Link node){
     printf("%s %s %s\n", node->nome, node->email, node->numeroTelefone);
 }
+
+void numOcorrenciasDominio(Link head, char *dominio){
+    Link nodeAux = NULL;
+    int contadorDominios = 0;
+    char *dominioAux;
+
+    for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->next){
+        dominioAux = getDominio(nodeAux);
+        /*printf("%s\n", dominioAux);*/
+        if(strcmp(dominio, dominioAux) == 0){
+            contadorDominios++;
+        }
+        free(dominioAux);
+    }
+
+    printf("%s:%d\n", dominio, contadorDominios);
+
+}
+
+char *getDominio(Link node){
+    int i = 0, e = 0, compDominio = 0, compLocal = 0, cont = 0;
+    char *dominio;
+
+    compDominio = comprimentoDominio(node);
+    compLocal = strlen(node->email) - compDominio;
+    dominio = (char *) malloc(sizeof(char)*(compDominio + 1));
+    /*printf("CompDominio = %d, compLocal = %d, compEmail = %d\n", compDominio, compLocal, compDominio + compLocal);*/
+
+    for (i = compLocal, e = 0; node->email[i] != '\0'; i += 1, e += 1){
+        /*printf("%c\n", node->email[i]);*/
+        dominio[e] = node->email[i];
+        cont++;
+    }
+    /*printf("Numero de caracteres : [%d]\n", cont);*/
+    dominio[e] = '\0';
+
+    return dominio;
+
+}
+
+int comprimentoDominio(Link node){
+    int i = 0, compLocal = 0;
+
+    for (i = 0; node->email[i] != '@'; i++){
+        compLocal++;
+    }
+    compLocal++;
+
+    return (strlen(node->email) - compLocal);
+
+}
+
+
