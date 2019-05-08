@@ -7,12 +7,18 @@
 #define MODULO 31
 
 typedef struct ListNode {
-    char *nome;
-    char *email;
-    char *numeroTelefone;
+    struct contacto *c;
     struct ListNode *nextNodeList;
     struct ListNode *nextNodeHashtable;
 } ListNode;
+
+typedef struct contacto {
+    char *nome;
+    char *email;
+    char *numeroTelefone;
+} contacto;
+
+typedef contacto* Contacto;
 
 typedef ListNode* Link;
 
@@ -131,8 +137,8 @@ int main(){
                     printf("Nome inexistente.\n");
                     break;
                 }
-                head = removeContacto(head, node->nome);
-                removeContactoHashtable(hashtableHeads, node->nome);
+                head = removeContacto(head, bufferNome);
+                removeContactoHashtable(hashtableHeads, bufferNome);
                 break;
                 }    
             case 'e':
@@ -193,7 +199,7 @@ Link procuraContactoHashtable(Link *hashtableHeads, char *nome){
     /*printf("Indice da hashtable : [%d]\n", i);
     printf("Ponteiro da cabeca do indice %d : [%p]\n", i, hashtableHeads[i]);*/
     for (nodeAux = hashtableHeads[i]; nodeAux != NULL; nodeAux = nodeAux->nextNodeHashtable){
-        if (strcmp(nodeAux->nome, nome) == 0){
+        if (strcmp(nodeAux->c->nome, nome) == 0){
             return nodeAux;
         }
     }
@@ -202,7 +208,7 @@ Link procuraContactoHashtable(Link *hashtableHeads, char *nome){
 }
 
 void insereContactoHashtable(Link *hashtableHeads, Link node){
-    int i = hash(node->nome);
+    int i = hash(node->c->nome);
     Link nodeAux = NULL;
 
     if (hashtableHeads[i] == NULL){
@@ -225,7 +231,7 @@ void removeContactoHashtable(Link *hashtableHeads, char *nome){
 
     for (nodeAux = hashtableHeads[i], prevNode = NULL; nodeAux != NULL; prevNode = nodeAux, nodeAux = nodeAux->nextNodeHashtable){
         /*printf("O nodeAux e [%p]\n", nodeAux);*/
-        if (strcmp(nodeAux->nome, nome) == 0){
+        if (strcmp(nodeAux->c->nome, nome) == 0){
             if (nodeAux == hashtableHeads[i]){
                 /*printf("Vai dar o endereco [%p] do next a [%p]\n", nodeAux->nextNodeHashtable, hashtableHeads[i]);*/
                 hashtableHeads[i] = nodeAux->nextNodeHashtable;
@@ -245,12 +251,13 @@ Link criaContacto(char *nome, char *email, char *numeroTelefone){
 
     node = (Link) malloc(sizeof(ListNode));
 
-    node->nome = (char*) malloc(sizeof(char)*(strlen(nome) + 1));
-    node->email = (char*) malloc(sizeof(char)*(strlen(email) + 1));
-    node->numeroTelefone = (char*) malloc(sizeof(char)*(strlen(numeroTelefone) + 1));
-    strcpy(node->nome, nome);
-    strcpy(node->email, email);
-    strcpy(node->numeroTelefone, numeroTelefone);
+    node->c = (Contacto) malloc(sizeof(contacto));
+    node->c->nome = (char*) malloc(sizeof(char)*(strlen(nome) + 1));
+    node->c->email = (char*) malloc(sizeof(char)*(strlen(email) + 1));
+    node->c->numeroTelefone = (char*) malloc(sizeof(char)*(strlen(numeroTelefone) + 1));
+    strcpy(node->c->nome, nome);
+    strcpy(node->c->email, email);
+    strcpy(node->c->numeroTelefone, numeroTelefone);
 
     node->nextNodeList = NULL;
     node->nextNodeHashtable = NULL;
@@ -307,7 +314,7 @@ Link removeContacto(Link head, char *nome){
     Link nodeAux = NULL, prevNode = NULL;
 
     for (nodeAux = head, prevNode = NULL; nodeAux != NULL; prevNode = nodeAux, nodeAux = nodeAux->nextNodeList){
-        if (strcmp(nodeAux->nome, nome) == 0){
+        if (strcmp(nodeAux->c->nome, nome) == 0){
             if (nodeAux == head){
                 head = nodeAux->nextNodeList;
             }
@@ -324,24 +331,25 @@ Link removeContacto(Link head, char *nome){
 void freeNode(Link node){
     /*printf("Vai eliminar o node :\n");
     printf("%s\n", node->nome);*/
-    free(node->nome);
+    free(node->c->nome);
     /*printf("%s\n", node->email);*/
-    free(node->email);
+    free(node->c->email);
     /*printf("%s\n", node->numeroTelefone);*/
-    free(node->numeroTelefone);
+    free(node->c->numeroTelefone);
     /*printf("Deu free das strings\n");*/
+    free(node->c);
     free(node);
 }
 
 void alteraEmail(Link node, char *novoEmail){
 
-    if (strlen(novoEmail) != strlen(node->email)){
-        node->email = (char*) realloc(node->email, sizeof(char)*(strlen(novoEmail) + 1));
-        strcpy(node->email, novoEmail);
+    if (strlen(novoEmail) != strlen(node->c->email)){
+        node->c->email = (char*) realloc(node->c->email, sizeof(char)*(strlen(novoEmail) + 1));
+        strcpy(node->c->email, novoEmail);
         return;
     }
 
-    strcpy(node->email, novoEmail);
+    strcpy(node->c->email, novoEmail);
 }
 
 void freeList(Link head){
@@ -364,7 +372,7 @@ void freeList(Link head){
 }
 
 void printNode(Link node){
-    printf("%s %s %s\n", node->nome, node->email, node->numeroTelefone);
+    printf("%s %s %s\n", node->c->nome, node->c->email, node->c->numeroTelefone);
 }
 
 void numOcorrenciasDominio(Link head, char *dominio){
@@ -390,13 +398,13 @@ char *getDominio(Link node){
     char *dominio;
 
     compDominio = comprimentoDominio(node);
-    compLocal = strlen(node->email) - compDominio;
+    compLocal = strlen(node->c->email) - compDominio;
     dominio = (char *) malloc(sizeof(char)*(compDominio + 1));
     /*printf("CompDominio = %d, compLocal = %d, compEmail = %d\n", compDominio, compLocal, compDominio + compLocal);*/
 
-    for (i = compLocal, e = 0; node->email[i] != '\0'; i += 1, e += 1){
-        /*printf("%c\n", node->email[i]);*/
-        dominio[e] = node->email[i];
+    for (i = compLocal, e = 0; node->c->email[i] != '\0'; i += 1, e += 1){
+        /*printf("%c\n", node->c->email[i]);*/
+        dominio[e] = node->c->email[i];
         cont++;
     }
     /*printf("Numero de caracteres : [%d]\n", cont);*/
@@ -409,12 +417,12 @@ char *getDominio(Link node){
 int comprimentoDominio(Link node){
     int i = 0, compLocal = 0;
 
-    for (i = 0; node->email[i] != '@'; i++){
+    for (i = 0; node->c->email[i] != '@'; i++){
         compLocal++;
     }
     compLocal++;
 
-    return (strlen(node->email) - compLocal);
+    return (strlen(node->c->email) - compLocal);
 
 }
 
