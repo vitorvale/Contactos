@@ -12,6 +12,7 @@ lista e outro para o proximo node da hashtable */
 typedef struct ListNode { 
     struct contacto *c;
     struct ListNode *nextNodeList;
+    struct ListNode *prevNodeList;
     struct ListNode *nextNodeHashtable;
 } ListNode;
 
@@ -31,11 +32,11 @@ typedef ListNode* Link;
 
 Link criaContacto(char *nome, char *email, char *numeroTelefone);
 
-Link insereContactoList(Link head, Link node);
+Link insereContactoList(Link head, Link *tail, Link node);
 
 void listaContactos(Link head);
 
-Link removeContacto(Link head, char *nome);
+Link removeContacto(Link head, Link *tail, Link node);
 
 void freeNode(Link node);
 
@@ -62,7 +63,7 @@ int hash(char *nome);
 int main(){
     /* inicializo o ponteiro para cabeca da lista e o ponteiro 
     para a hashtable a NULL */
-    Link head = NULL, *hashtableHeads = NULL;
+    Link head = NULL, tail = NULL, *hashtableHeads = NULL;
     /* inicializo o caracter que guarda o comando e as strings
     que funcionam como buffers para a informacao do contacto que
     se recebe do input (nome, email, numero de telefone e dominio) */
@@ -116,7 +117,8 @@ int main(){
                     basicamente uso os mesmos nodes para as duas estruturas
                     e arranjo os ponteiros de modo a poder percorrer as duas */
                     Link node = criaContacto(bufferNome, bufferEmail, bufferNumTelefone);
-                    head = insereContactoList(head, node);
+                    /*printContacto(node);*/
+                    head = insereContactoList(head, &tail, node);
                     insereContactoHashtable(hashtableHeads, node);
                 }
                 /* caso ja exista dou print da mensagem de erro */
@@ -163,7 +165,7 @@ int main(){
                     printf("Nome inexistente.\n");
                     break;
                 }
-                head = removeContacto(head, bufferNome);
+                head = removeContacto(head, &tail, node);
                 removeContactoHashtable(hashtableHeads, bufferNome);
                 break;
                 }    
@@ -319,6 +321,7 @@ Link criaContacto(char *nome, char *email, char *numeroTelefone){
     /* coloca os ponteiros que apontam para os proximos nodes
     ambos a NULL */
     node->nextNodeList = NULL;
+    node->prevNodeList = NULL;
     node->nextNodeHashtable = NULL;
 
     return node;
@@ -326,20 +329,21 @@ Link criaContacto(char *nome, char *email, char *numeroTelefone){
 
 /* funcao que, dado o ponteiro para a cabeca da lista principal 
 e um node, insere o node na lista e retorna a cabeca */
-Link insereContactoList(Link head, Link node){
-    Link nodeAux = NULL;
+Link insereContactoList(Link head, Link *tail, Link node){
 
     /* se a cabeca apontar para NULL entao
     a cabeca fica igual ao node criado */
     if (head == NULL){
+        *tail = node;
         return node;
     }
     /* caso contrario, percorro a lista ate ao ultimo node,
     ponho o ponteiro que aponta para o proximo node da lista
     a apontar para o node passado como argumento e devolvo a
     cabeca da lista */
-    for (nodeAux = head; nodeAux->nextNodeList != NULL; nodeAux = nodeAux->nextNodeList);
-    nodeAux->nextNodeList = node;
+    (*tail)->nextNodeList = node;
+    node->prevNodeList = *tail;
+    *tail = node;
 
     return head;
 }
@@ -358,41 +362,36 @@ void listaContactos(Link head){
 percorre a lista ate encontrar o nome e depois remove o node sem dar free
 uma vez que o free ocorreu quando a funcao removeu o node da hashtable,
 retornando o ponteiro para cabeca da lista */
-Link removeContacto(Link head, char *nome){
-    Link nodeAux = NULL, prevNode = NULL;
+Link removeContacto(Link head, Link *tail, Link node){
 
-    /*percorre-se a lista com dois ponteiros desfasados um do outro pela distancia
-    de um node e depois alteram-se os ponteiros de modo a que o ponteiro next do 
-    anterior ao que vai ser removido aponte para a cabeca do que se segue a ele */
-    for (nodeAux = head, prevNode = NULL; nodeAux != NULL; prevNode = nodeAux, nodeAux = nodeAux->nextNodeList){
-        if (strcmp(nodeAux->c->nome, nome) == 0){
-            /* caso o node a eliminar seja a cabeca, simplesmente
-            poe-se o ponteiro da cabeca da lista a apontar para
-            o proximo node da lista */
-            if (nodeAux == head){
-                head = nodeAux->nextNodeList;
-            }
-            else{
-                prevNode->nextNodeList = nodeAux->nextNodeList;
-            }
-            break;
-        }    
+    if ((node == head) && (head->nextNodeList == NULL)){
+        *tail = NULL;
+        return NULL;
     }
-
-    return head;        
+    else if ((node == head) && (head->nextNodeList != NULL)){
+        head = head->nextNodeList;
+        node->prevNodeList = NULL;
+        return head;
+    }
+    else if (node == *tail){
+        (*tail)->prevNodeList->nextNodeList = NULL;
+        *tail = (*tail)->prevNodeList;
+        return head;
+    }
+    else{
+        node->prevNodeList->nextNodeList = node->nextNodeList;
+        node->nextNodeList->prevNodeList = node->prevNodeList;
+        return head;
+    }
+       
 }
 
 /* funcao que, dado um ponteiro para um node, da free de toda a memoria
 alocada para esse node */
 void freeNode(Link node){
-    /*printf("Vai eliminar o node :\n");
-    printf("%s\n", node->nome);*/
     free(node->c->nome);
-    /*printf("%s\n", node->email);*/
     free(node->c->email);
-    /*printf("%s\n", node->numeroTelefone);*/
     free(node->c->numeroTelefone);
-    /*printf("Deu free das strings\n");*/
     free(node->c);
     free(node);
 }
