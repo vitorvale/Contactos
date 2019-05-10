@@ -24,6 +24,16 @@ typedef struct contacto {
     char *numeroTelefone;
 } contacto;
 
+typedef struct ocorrenciaDominio{
+    char *dominio;
+    int numOcorrencias;
+} OcorrenciaDom;
+
+typedef struct vetorOcorrencias{
+    int tamanho;
+    OcorrenciaDom *vetor;
+} VetorOcorrencias;
+
 /* estrutura que consiste num ponteiro para um contacto */
 typedef contacto* Contacto;
 
@@ -46,7 +56,7 @@ void freeList(Link head);
 
 void printContacto(Link node);
 
-void numOcorrenciasDominio(Link head, char *dominio);
+void numOcorrenciasDominio(VetorOcorrencias *vetorOcorrenciasDom, char *dominio);
 
 char *getDominio(Link node);
 
@@ -60,6 +70,12 @@ void removeContactoHashtable(Link *hashtableHeads, char *nome);
 
 int hash(char *nome);
 
+void adicionaOcorrenciaDominio(VetorOcorrencias *vetorOcorrenciasDominio, Link node);
+
+void freeVetorOcorrencias(VetorOcorrencias *vetorOcorrenciasDom);
+
+void decrementaOcorrenciaDominio(VetorOcorrencias *vetorOcorrenciasDom, Link node);
+
 int main(){
     /* inicializo o ponteiro para cabeca da lista e o ponteiro 
     para a hashtable a NULL */
@@ -69,6 +85,10 @@ int main(){
     se recebe do input (nome, email, numero de telefone e dominio) */
     char cmd, bufferNome[MAX_NOME], bufferEmail[MAX_EMAIL], bufferNumTelefone[MAX_NUMERO_TELEFONE], bufferDominio[MAX_EMAIL];
     int i;
+
+    VetorOcorrencias *vetorOcorrenciasDom;
+    vetorOcorrenciasDom = (VetorOcorrencias *) malloc(sizeof(VetorOcorrencias));
+    vetorOcorrenciasDom->tamanho = 0;
 
     /* inicializo todos os buffers com '\0' */
     memset(bufferNome, '\0', sizeof(char) * MAX_NOME);
@@ -82,7 +102,7 @@ int main(){
 
     for (i = 0; i < MODULO; i++){
         hashtableHeads[i] = NULL;
-    }    
+    }
 
     while(1){
 
@@ -95,6 +115,7 @@ int main(){
         if (cmd == 'x'){
             freeList(head);
             free(hashtableHeads);
+            freeVetorOcorrencias(vetorOcorrenciasDom);
             break;
         }
 
@@ -117,6 +138,7 @@ int main(){
                     basicamente uso os mesmos nodes para as duas estruturas
                     e arranjo os ponteiros de modo a poder percorrer as duas */
                     Link node = criaContacto(bufferNome, bufferEmail, bufferNumTelefone);
+                    adicionaOcorrenciaDominio(vetorOcorrenciasDom, node);
                     /*printContacto(node);*/
                     head = insereContactoList(head, &tail, node);
                     insereContactoHashtable(hashtableHeads, node);
@@ -125,13 +147,13 @@ int main(){
                 else{
                     printf("Nome existente.\n");
                 }
-                break;
                 }
+                break;
             case 'l':
                 {
                 listaContactos(head);
-                break;
                 }    
+                break;
             case 'p':
                 {
                 Link node = NULL;
@@ -148,8 +170,8 @@ int main(){
                     break;
                 }
                 printContacto(node);
-                break;
                 }
+                break;
             case 'r':
                 {
                 Link node = NULL;
@@ -165,10 +187,11 @@ int main(){
                     printf("Nome inexistente.\n");
                     break;
                 }
+                decrementaOcorrenciaDominio(vetorOcorrenciasDom, node);
                 head = removeContacto(head, &tail, node);
                 removeContactoHashtable(hashtableHeads, bufferNome);
-                break;
                 }    
+                break;
             case 'e':
                 {
                 Link node = NULL;
@@ -185,8 +208,8 @@ int main(){
                     break;
                 }
                 alteraEmail(node, bufferEmail);
-                break;
                 }
+                break;
             case 'c':
                 {
                 /* faco getchar para me livrar do espaco a seguir ao comando
@@ -194,9 +217,9 @@ int main(){
                 de ocorrencias pretendo calcular */
                 getchar();
                 scanf("%s", bufferDominio);
-                numOcorrenciasDominio(head, bufferDominio);
+                numOcorrenciasDominio(vetorOcorrenciasDom, bufferDominio);
+                }
                 break;
-                }    
             }    
 
 
@@ -206,6 +229,67 @@ int main(){
 
     return 0;
     
+}
+
+
+void adicionaOcorrenciaDominio(VetorOcorrencias *vetorOcorrenciasDom, Link node){
+    int i, compDominio;
+    char *dominioAux;
+
+    dominioAux = getDominio(node);
+    compDominio = comprimentoDominio(node);
+
+    for (i = 0; i < vetorOcorrenciasDom->tamanho; i++){
+        if(strcmp(vetorOcorrenciasDom->vetor[i].dominio, dominioAux) == 0){
+            vetorOcorrenciasDom->vetor[i].numOcorrencias++;
+            free(dominioAux);
+            return;
+        }
+    }
+    if (vetorOcorrenciasDom->tamanho == 0){
+        vetorOcorrenciasDom->vetor = (OcorrenciaDom *) malloc(sizeof(OcorrenciaDom));
+        vetorOcorrenciasDom->vetor[0].dominio = (char *) malloc(sizeof(char)*(compDominio + 1));
+        vetorOcorrenciasDom->tamanho = 1;
+        strcpy(vetorOcorrenciasDom->vetor[0].dominio, dominioAux);
+        vetorOcorrenciasDom->vetor[0].numOcorrencias = 1;
+    }
+    else{
+        vetorOcorrenciasDom->vetor = (OcorrenciaDom *) realloc(vetorOcorrenciasDom->vetor, 
+        sizeof(OcorrenciaDom)*(vetorOcorrenciasDom->tamanho + 1));
+        vetorOcorrenciasDom->vetor[i].dominio = (char *) malloc(sizeof(char)*(compDominio + 1));
+        strcpy(vetorOcorrenciasDom->vetor[i].dominio, dominioAux);
+        vetorOcorrenciasDom->vetor[i].numOcorrencias = 1;
+        vetorOcorrenciasDom->tamanho++;
+    }
+    
+    free(dominioAux);
+}
+
+void decrementaOcorrenciaDominio(VetorOcorrencias *vetorOcorrenciasDom, Link node){
+    int i;
+    char *dominioAux;
+
+    dominioAux = getDominio(node);
+    for (i = 0; i < vetorOcorrenciasDom->tamanho; i++){
+        if(strcmp(vetorOcorrenciasDom->vetor[i].dominio, dominioAux) == 0){
+            if (vetorOcorrenciasDom->vetor[i].numOcorrencias > 0){
+                vetorOcorrenciasDom->vetor[i].numOcorrencias--;
+            }
+            break;
+        }
+    }
+
+    free(dominioAux);
+}
+
+void freeVetorOcorrencias(VetorOcorrencias *vetorOcorrenciasDom){
+    int i;
+
+    for(i = 0; i < vetorOcorrenciasDom->tamanho; i++){
+        free(vetorOcorrenciasDom->vetor[i].dominio);
+    }
+    free(vetorOcorrenciasDom->vetor);
+    free(vetorOcorrenciasDom);
 }
 
 /* funcao que recebe o nome do contacto e que calcula o indice
@@ -441,25 +525,20 @@ void printContacto(Link node){
 /* funcao que, dada um ponteiro para a cabeca da lista principal, percorre a lista
 toda contando o numero de ocorrencias de um dado dominio, passado como argumento,
 na mesma lista */
-void numOcorrenciasDominio(Link head, char *dominio){
-    Link nodeAux = NULL;
+void numOcorrenciasDominio(VetorOcorrencias *vetorOcorrenciasDom, char *dominio){
+    /*Link nodeAux = NULL;
     int contadorDominios = 0;
-    char *dominioAux;
+    char *dominioAux;*/
+    int i = 0;
 
-    /* percorro a lista obtendo os dominios de cada node e comparo 
-    com o node dado como argumento e aumento o contador cada vez que
-    os dominios sao iguais */
-    for (nodeAux = head; nodeAux != NULL; nodeAux = nodeAux->nextNodeList){
-        dominioAux = getDominio(nodeAux);
-        if(strcmp(dominio, dominioAux) == 0){
-            contadorDominios++;
+    for (i = 0; i < vetorOcorrenciasDom->tamanho; i++){
+        if (strcmp(vetorOcorrenciasDom->vetor[i].dominio, dominio) == 0){
+            printf("%s:%d\n", dominio, vetorOcorrenciasDom->vetor[i].numOcorrencias);
+            return;
         }
-        /* dou free da string alocada na funcao getDominio */
-        free(dominioAux);
     }
 
-    printf("%s:%d\n", dominio, contadorDominios);
-
+    printf("%s:0\n", dominio);
 }
 
 /* funcao que, dada um ponteiro para um node, calcula o comprimento do email
