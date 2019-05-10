@@ -207,7 +207,9 @@ int main(){
                     printf("Nome inexistente.\n");
                     break;
                 }
+                decrementaOcorrenciaDominio(vetorOcorrenciasDom, node);
                 alteraEmail(node, bufferEmail);
+                adicionaOcorrenciaDominio(vetorOcorrenciasDom, node);
                 }
                 break;
             case 'c':
